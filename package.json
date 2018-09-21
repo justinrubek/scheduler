@@ -1,0 +1,23 @@
+{
+  "name": "scheduler",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+  "workspaces": ["server", "static"],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "cd server && yarn run build && cd ../static && yarn run build --prefix ./server",
+    "start": "node ./server/dist/index"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/justinrubek/scheduler.git"
+  },
+  "author": "Justin Rubek <rubejus@bvu.edu>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://gitlab.com/justinrubek/scheduler/issues"
+  },
+  "homepage": "https://gitlab.com/justinrubek/scheduler#README"
+}

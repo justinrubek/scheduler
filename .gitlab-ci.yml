@@ -1,0 +1,20 @@
+stages:
+  - deploy
+
+deploy to staging:
+  stage: deploy
+  script: 
+    - yarn install
+    - yarn build
+  only:
+    - master
+
+deploy to production:
+  stage: deploy
+  script: 
+    - yarn install
+    - yarn build
+  environment:
+    name: production
+  only:
+    - tags

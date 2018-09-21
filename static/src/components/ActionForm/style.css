@@ -1,0 +1,23 @@
+.submit {
+  background-color: #0000CC;
+  color: #dadada;
+  border: none;
+  font-size: 1.1rem;
+  margin: 4px;
+  padding: 2px;
+  transition: background-color 1s ease;
+}
+
+.submit:hover {
+  background-color: #0000AA;
+}
+
+.container {
+  border: 1px solid black;
+}
+
+.title {
+  padding: 0px 8px 3px 8px;
+  font-weight: bold;
+  font-size: 1.4rem;
+}
