@@ -4,7 +4,7 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
 const path = require("path");
 
-const config = {
+module.exports = {
   entry: ['babel-polyfill', __dirname + '/src/index.jsx'],
   cache: false,
   devtool: 'cheap-module-source-map',
@@ -20,7 +20,13 @@ const config = {
       {
         test: /\.jsx?/,
         exclude: /node_modules/,
-        use: 'babel-loader'
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [ '@babel/preset-env', '@babel/preset-react' ],
+            plugins: [ '@babel/plugin-syntax-object-rest-spread' ]
+          }
+        }
       },
       {
         test: /\.css$/,
@@ -46,15 +52,5 @@ const config = {
     new PrettierPlugin({
       extensions: [ '.js', '.jsx' ]
     })//,
-   // new webpack.IgnorePlugin(/^\.\/locale$/, [/moment$/]),
-   /* new CompressionPlugin({
-      asset: '[path].qz[query]',
-      algorithm: 'gzip',
-      test: /\.js$|\.css$|\.html$/,
-      threshold: 10240,
-      minRatio: 0
-    })*/
   ]
 };
-
-module.exports = config;
