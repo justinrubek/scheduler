@@ -4,12 +4,12 @@ import moment from "moment";
 
 import style from "./style.css";
 
-import ActionForm from "./ActionForm";
+import Form from "./Form";
+import ShiftView from "./ShiftView";
 
 function log(type, time) {
   console.log(`Sending: ${type} for time ${time}`);
   // Create log object
-  // TODO: Send time as epoch time instead of hours and minutes
   const data = {
     type: type,
     time: time
@@ -26,15 +26,12 @@ const actions = [
       { type: "time", name: "startTime", label: "Starting time" },
       { type: "time", name: "endTime", label: "Ending time" },
       { type: "employee", name: "scheduledWorker", label: "Scheduled employee" }
-    ],
-    submitType: "POST",
-    route: "/api/shifts"
+    ]
   },
   {
     name: "employee_creation_form",
     input: [{ type: "text", name: "name", label: "Name" }],
-    submitType: "POST",
-    route: "/api/employees"
+    submit: data => axios.post("/api/employees", data)
   }
 ];
 
@@ -69,11 +66,10 @@ export default class App extends React.Component {
     for (let action of actions) {
       forms.push(
         <div className={style.box} key={action.name}>
-          <ActionForm
+          <Form
             input={action.input}
             name={action.name}
-            submitType={action.submitType}
-            route={action.route}
+            onChange={console.log}
           />
         </div>
       );
@@ -83,6 +79,7 @@ export default class App extends React.Component {
       <div>
         <h1>Scheduler</h1>
         {forms}
+        <ShiftView />
       </div>
     );
   }
