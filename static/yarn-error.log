@@ -1,0 +1,71 @@
+Arguments: 
+  /usr/bin/node /usr/bin/yarn build
+
+PATH: 
+  /home/justin/.gem/ruby/2.5.0/bin:/home/justin/.npm-packages/bin:/home/justin/.cargo/bin:/opt/google-cloud-sdk/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/opt/adobe-air-sdk/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/usr/lib/smlnj/bin
+
+Yarn version: 
+  1.10.1
+
+Node version: 
+  10.11.0
+
+Platform: 
+  linux x64
+
+Trace: 
+  SyntaxError: /home/justin/projects/scheduler/static/package.json: Unexpected token } in JSON at position 1193
+      at JSON.parse (<anonymous>)
+      at /usr/lib/node_modules/yarn/lib/cli.js:1136:59
+      at Generator.next (<anonymous>)
+      at step (/usr/lib/node_modules/yarn/lib/cli.js:98:30)
+      at /usr/lib/node_modules/yarn/lib/cli.js:109:13
+
+npm manifest: 
+  {
+    "name": "scheduler-client",
+    "version": "0.0.1",
+    "main": "dist/bundle.js",
+    "scripts": {
+      "build": "webpack --mode development",
+      "produce": "webpack --mode production",
+      "watch": "webpack --progress -d --config webpack.config.js --watch",
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "private": true,
+    "author": "Justin Rubek <rubejus@bvu.edu>",
+    "license": "MIT",
+    "description": "",
+    "dependencies": {
+      "axios": "^0.18.0",
+      "js-file-download": "^0.4.1",
+      "moment": "^2.22.2",
+      "react": "^16.5.0",
+      "react-dom": "^16.5.0",
+      "react-router-dom": "^4.3.1",
+      "shortid": "^2.2.13"
+    },
+    "devDependencies": {
+      "@babel/core": "^7.1.2",
+      "@babel/plugin-syntax-object-rest-spread": "^7.0.0",
+      "@babel/preset-env": "^7.1.0",
+      "@babel/preset-react": "^7.0.0",
+      "babel-loader": "^7.1.5",
+      "babel-polyfill": "^6.26.0",
+      "babel-preset-env": "^1.7.0",
+      "babel-preset-react": "^6.24.1",
+      "compression-webpack-plugin": "^1.1.12",
+      "css-loader": "^0.28.11",
+      "prettier": "^1.14.3",
+      "prettier-webpack-plugin": "^1.1.0",
+      "style-loader": "^0.21.0",
+      "webpack": "^4.23.1",
+      "webpack-cli": "^3.1.2"
+    },
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

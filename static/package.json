@@ -4,8 +4,8 @@
   "main": "dist/bundle.js",
   "scripts": {
     "build": "webpack --mode development",
-    "produce": "webpack --mode production",
     "watch": "webpack --progress -d --config webpack.config.js --watch",
+    "produce": "webpack --mode production",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "private": true,
@@ -16,6 +16,7 @@
     "axios": "^0.18.0",
     "js-file-download": "^0.4.1",
     "moment": "^2.22.2",
+    "moment-range": "^4.0.1",
     "react": "^16.5.0",
     "react-dom": "^16.5.0",
     "react-router-dom": "^4.3.1",

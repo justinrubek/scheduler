@@ -5,7 +5,8 @@ import moment from "moment";
 import style from "./style.css";
 
 import Form from "./Form";
-import ShiftView from "./ShiftView";
+
+import ScheduleWizard from "./ScheduleWizard";
 
 function log(type, time) {
   console.log(`Sending: ${type} for time ${time}`);
@@ -78,8 +79,8 @@ export default class App extends React.Component {
     return (
       <div>
         <h1>Scheduler</h1>
+        <ScheduleWizard startDate="2018-10-27" endDate="2018-11-05" />
         {forms}
-        <ShiftView />
       </div>
     );
   }

@@ -21,14 +21,3 @@
   font-weight: bold;
   font-size: 1.4rem;
 }
-
-.displayGroup {
-  display: flex;
-  max-width: 250px;
-}
-
-.label, .value {
-  flex: 1;
-  padding: 5px;
-  width: 100%;
-}
