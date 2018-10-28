@@ -14,10 +14,19 @@
 
 .container {
   border: 1px solid black;
+  display: flex;
 }
 
 .title {
   padding: 0px 8px 3px 8px;
   font-weight: bold;
   font-size: 1.4rem;
+}
+
+.segment_display {
+}
+
+.segment_container {
+  flex: 1;
+  flex-direction: column;
 }

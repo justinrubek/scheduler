@@ -120,7 +120,7 @@ export default class ScheduleWizard extends Component {
       });
 
       return (
-        <div className={style.container} key={date.day}>
+        <div className={style.segment_container} key={date.day}>
           <h2> {date.moment.format("MMM Do YY")} </h2>
           <button
             onClick={() => {
@@ -129,18 +129,18 @@ export default class ScheduleWizard extends Component {
           >
             +
           </button>
-          {segments}
+          <div className={style.segment_display}>{segments}</div>
         </div>
       );
     });
 
     return (
-      <div className={style.container}>
+      <div>
         <div className={style.title}>Schedule shifts for week</div>
-        {days}
         <button onClick={this.submit} className={style.submit}>
           Submit
         </button>
+        <div className={style.container}>{days}</div>
       </div>
     );
   }
