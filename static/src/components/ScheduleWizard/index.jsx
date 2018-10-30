@@ -47,9 +47,9 @@ export default class ScheduleWizard extends Component {
       if (date.dateString === dateString) {
         date.segments.push({
           id: shortid.generate(),
-          startTime: null,
-          endTime: null,
-          count: 0
+          startTime: "00:00",
+          endTime: "00:00",
+          strength: 0
         });
       }
       return { ...date };
@@ -89,7 +89,8 @@ export default class ScheduleWizard extends Component {
         // Copy the array and change the value at that index
         const new_segments = date.segments.map(segment => {
           if (segment.id === id) {
-            return val;
+            // Ensure we copy the ID from segment into val using spread operator
+            return { ...segment, ...val };
           } else {
             return segment;
           }
@@ -110,37 +111,53 @@ export default class ScheduleWizard extends Component {
     const days = dates.map(date => {
       const segments = date.segments.map((segment, i) => {
         const change = new_val =>
-          this.segmentChange(date.dateString, i, new_val);
+          this.segmentChange(date.dateString, segment.id, new_val);
 
         const remove = () => this.removeSegment(date.dateString, segment.id);
 
         return (
-          <TimeSegment key={segment.id} onChange={change} onRemove={remove} />
+          <TimeSegment
+            key={segment.id}
+            onChange={change}
+            onRemove={remove}
+            startTime={segment.startTime}
+            endTime={segment.endTime}
+            strength={segment.strength}
+            title={`time period ${i + 1}`}
+          />
         );
       });
 
       return (
-        <div className={style.segment_container} key={date.day}>
-          <h2> {date.moment.format("MMM Do YY")} </h2>
-          <button
-            onClick={() => {
-              this.createSegment(date.dateString);
-            }}
-          >
-            +
-          </button>
-          <div className={style.segment_display}>{segments}</div>
+        <div className={style.segment_container} key={date.dateString}>
+          <div key="info" className={style.separated}>
+            <h2> {date.moment.format("MMM Do YY")} </h2>
+            <button
+              onClick={() => {
+                this.createSegment(date.dateString);
+              }}
+            >
+              +
+            </button>
+          </div>
+          <div key="form" className={style.segment_display}>
+            {segments}
+          </div>
         </div>
       );
     });
 
     return (
-      <div>
-        <div className={style.title}>Schedule shifts for week</div>
-        <button onClick={this.submit} className={style.submit}>
-          Submit
-        </button>
-        <div className={style.container}>{days}</div>
+      <div className={style.box}>
+        <div key="top" className={style.separated}>
+          <div className={style.title}>Schedule shifts for week</div>
+          <button onClick={this.submit} className={style.submit}>
+            Generate shifts
+          </button>
+        </div>
+        <div key="days" className={style.container}>
+          {days}
+        </div>
       </div>
     );
   }

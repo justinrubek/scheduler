@@ -12,7 +12,7 @@ export default class TimeSelector extends React.Component {
           const hours = new_time[0];
           const minutes = new_time[1];
 
-          this.props.onChange(hours, minutes);
+          this.props.onChange(`${hours}:${minutes}`);
         }}
       />
     );

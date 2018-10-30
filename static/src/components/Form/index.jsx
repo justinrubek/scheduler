@@ -3,13 +3,14 @@ import axios from "axios";
 import style from "./style.css";
 
 import { DateSelectorForm, EmployeeForm, TimeForm, SelectForm } from "../forms";
-
-let forms = require("../forms");
+import LabeledItem from "../forms/LabeledItem";
 
 function getDefaultValueFromType(type) {
   switch (type) {
     case "number":
       return 0;
+    case "text":
+      return "";
     default:
       return null;
   }
@@ -103,10 +104,9 @@ export default class Form extends React.Component {
     const input_display = inputs.map(input => {
       let form = this.getForm(input);
       return (
-        <div key={input.label}>
-          <p>{input.label}</p>
+        <LabeledItem key={input.label} label={input.label}>
           {form}
-        </div>
+        </LabeledItem>
       );
     });
 

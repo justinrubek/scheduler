@@ -21,18 +21,11 @@ function log(type, time) {
 
 const actions = [
   {
-    name: "shift_creation_form",
-    input: [
-      { type: "date", name: "date", label: "Shift date" },
-      { type: "time", name: "startTime", label: "Starting time" },
-      { type: "time", name: "endTime", label: "Ending time" },
-      { type: "employee", name: "scheduledWorker", label: "Scheduled employee" }
-    ]
-  },
-  {
     name: "employee_creation_form",
-    input: [{ type: "text", name: "name", label: "Name" }],
-    submit: data => axios.post("/api/employees", data)
+    input: [
+      { type: "text", name: "name", label: "Name" },
+      { type: "text", name: "email", label: "Email" }
+    ]
   }
 ];
 
@@ -46,7 +39,7 @@ function create_shift(date, startTime, endTime, scheduledWorker = null) {
     `Creating shift for employee ${scheduledWorker} on date: ${date.toISOString()} from ${startTime} to ${endTime}`
   );
 }
- */
+     */
 export default class App extends React.Component {
   constructor(props) {
     super(props);
@@ -79,7 +72,7 @@ export default class App extends React.Component {
     return (
       <div>
         <h1>Scheduler</h1>
-        <ScheduleWizard startDate="2018-10-27" endDate="2018-11-05" />
+        <ScheduleWizard startDate="2018-10-27" endDate="2018-11-02" />
         {forms}
       </div>
     );

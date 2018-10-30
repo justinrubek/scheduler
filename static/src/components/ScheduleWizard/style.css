@@ -23,10 +23,27 @@
   font-size: 1.4rem;
 }
 
+.smalltitle {
+  padding: 1px;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
 .segment_display {
 }
 
 .segment_container {
   flex: 1;
   flex-direction: column;
+  padding: 5px;
+}
+
+.separated {
+  display: flex;
+  justify-content: space-between;
+}
+
+.box {
+  border: 1px solid black;
+  margin-top: 4px;
 }

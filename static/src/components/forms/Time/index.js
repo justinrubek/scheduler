@@ -4,6 +4,8 @@ import moment from "moment";
 import TimeSelector from "../../fields/Time";
 import FormStyle from "../../forms/Form";
 
+import style from "../style.css";
+
 export default class TimeForm extends React.Component {
   constructor(props) {
     super(props);
@@ -13,17 +15,22 @@ export default class TimeForm extends React.Component {
     this.state = {};
   }
 
-  onChange(hours, minutes) {
+  onChange(time) {
     if (this.props.onChange != null) {
-      this.props.onChange(`${hours}:${minutes}`);
+      this.props.onChange(time);
     }
   }
 
   render() {
     return (
-      <FormStyle>
-        <TimeSelector onChange={this.onChange} />
-      </FormStyle>
+      <span className={style.displayGroup}>
+        <p className={style.label}>{this.props.label}</p>
+        <TimeSelector
+          className={style.value}
+          onChange={this.onChange}
+          value={this.props.value}
+        />
+      </span>
     );
   }
 }

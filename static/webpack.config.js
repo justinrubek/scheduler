@@ -1,7 +1,5 @@
 const webpack = require('webpack');
 const PrettierPlugin = require('prettier-webpack-plugin');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
-const CompressionPlugin = require('compression-webpack-plugin');
 const path = require("path");
 
 module.exports = {
@@ -51,6 +49,6 @@ module.exports = {
   plugins: [
     new PrettierPlugin({
       extensions: [ '.js', '.jsx' ]
-    })//,
+    })
   ]
 };
