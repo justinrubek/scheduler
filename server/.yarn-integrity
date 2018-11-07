@@ -1,0 +1,12 @@
+{
+  "systemParams": "linux-x64-64",
+  "modulesFolders": [
+    "server"
+  ],
+  "flags": [],
+  "linkedModules": [],
+  "topLevelPatterns": [],
+  "lockfileEntries": {},
+  "files": [],
+  "artifacts": {}
+}

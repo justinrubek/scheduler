@@ -2,8 +2,8 @@ import React from "react";
 import axios from "axios";
 import style from "./style.css";
 
-import { DateSelectorForm, EmployeeForm, TimeForm, SelectForm } from "../forms";
-import LabeledItem from "../forms/LabeledItem";
+import { DateField, TimeField, SelectField } from "../fields";
+import LabeledItem from "../format/LabeledItem";
 
 function getDefaultValueFromType(type) {
   switch (type) {
@@ -76,11 +76,11 @@ export default class Form extends React.Component {
           return <input type="text" onChange={e => changed(e.target.value)} />;
           break;
         case "time":
-          return <TimeForm info={input} onChange={changed} />;
+          return <TimeField info={input} onChange={changed} />;
           break;
         case "select":
           return (
-            <SelectForm
+            <SelectField
               info={input}
               options={input.options}
               onChange={changed}
@@ -88,7 +88,7 @@ export default class Form extends React.Component {
           );
           break;
         case "date":
-          return <DateSelectorForm info={input} onChange={changed} />;
+          return <DateField info={input} onChange={changed} />;
           break;
         default:
           return <div>Unimplemented type ({input.type})</div>;

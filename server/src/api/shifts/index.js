@@ -2,7 +2,7 @@ import express from "express";
 import moment from "moment";
 import mongoose from "mongoose";
 
-import controller from "./controller"
+import controller from "./controller";
 
 const router = express.Router();
 export default router;
@@ -14,4 +14,4 @@ router.post("/", controller.create);
 
 router.delete("/:id", controller.deleteById);
 
-// TODO: put
+router.put("/:id", controller.updateById);

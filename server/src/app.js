@@ -3,6 +3,7 @@ import path from "path";
 import logger from "morgan";
 import moment from "moment";
 import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
 
 import bluebird from "bluebird";
 
@@ -26,6 +27,7 @@ app.locals.db_connection = db;
 app.use(logger(config.logging_format));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
 app.use(express.static(public_folder));
 

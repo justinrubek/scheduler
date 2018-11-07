@@ -4,9 +4,8 @@ import style from "./style.css";
 
 import Form from "../Form";
 import TimeField from "../fields/Time";
-import TimeForm from "../forms/Time";
 
-import LabeledItem from "../forms/LabeledItem";
+import LabeledItem from "../format/LabeledItem";
 
 export default class TimeSegment extends React.Component {
   constructor(props) {
@@ -18,7 +17,7 @@ export default class TimeSegment extends React.Component {
     this.state = {
       startTime: props.startTime,
       endTime: props.endTime,
-      strength: 0
+      strength: props.strength
     };
   }
 
@@ -27,11 +26,15 @@ export default class TimeSegment extends React.Component {
   }
 
   changeValue(name, new_val) {
+    // Validation
+    if (name === "strength") {
+      if (new_val < 1) return;
+    }
     const { startTime, endTime, strength } = this.props;
 
     const new_vals = { startTime, endTime, strength };
+
     new_vals[name] = new_val;
-    console.log(new_vals);
 
     this.change(new_vals);
     this.setState(new_vals);

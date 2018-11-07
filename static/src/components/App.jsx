@@ -8,6 +8,8 @@ import Form from "./Form";
 
 import ScheduleWizard from "./ScheduleWizard";
 
+import AlgorithmDebug from "./AlgorithmDebug";
+
 function log(type, time) {
   console.log(`Sending: ${type} for time ${time}`);
   // Create log object
@@ -71,9 +73,9 @@ export default class App extends React.Component {
 
     return (
       <div>
+        <AlgorithmDebug />
         <h1>Scheduler</h1>
         <ScheduleWizard startDate="2018-10-27" endDate="2018-11-02" />
-        {forms}
       </div>
     );
   }
