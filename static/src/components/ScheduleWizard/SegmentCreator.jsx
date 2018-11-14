@@ -42,7 +42,20 @@ export default class SegmentCreator extends Component {
   submit() {
     const { dates } = this.state;
 
-    let data = dates.reduce((acc, day) => {
+    // Get the earliest and latest datetimes to capture the time range
+    const dateTime = (date, time) => `${date}T${time}:00`;
+    const { startDate, endDate } = this.props;
+    const startDateTime = dateTime(startDate, dates[0].segments[0].startTime);
+
+    let endSegments = dates[dates.length - 1].segments;
+    const endDateTime = dateTime(
+      endDate,
+      endSegments[endSegments.length - 1].endTime
+    );
+
+    let range = { start: startDateTime, end: endDateTime };
+
+    let strengthData = dates.reduce((acc, day) => {
       acc[day.dateString] = day.segments.map(segment => ({
         start: segment.startTime,
         end: segment.endTime,
@@ -52,7 +65,7 @@ export default class SegmentCreator extends Component {
     }, {});
 
     if (this.props.onSubmit) {
-      this.props.onSubmit(data);
+      this.props.onSubmit({ strengthData, range });
     }
   }
 

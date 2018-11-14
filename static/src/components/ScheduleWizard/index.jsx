@@ -77,7 +77,10 @@ export default class ScheduleWizard extends Component {
           startDate={startDate}
           endDate={endDate}
           onSubmit={async data => {
-            let response = await axios.post("/api/createSchedule", data);
+            let response = await axios.post(
+              "/api/schedule/createSchedule",
+              data
+            );
             console.log(response);
           }}
           cancel={() => this.setState({ startDate: null, endDate: null })}
