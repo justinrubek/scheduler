@@ -161,7 +161,7 @@ router.post("/createSchedule", async function(req, res, next) {
                 found = true;
                 // Figure out what time they start working
 
-                allShifts.push({ id: worker.id, start: formatMoment(shiftStart.tz("America/Toronto")),
+                allShifts.push({ id: worker.id, start: formatMoment(shiftStart),
                   dateString: dateString, duration: shiftLength});
                 /*
                 allShifts.push({ id: worker.id, start: formatMoment(shiftStart.tz("America/Toronto")),
@@ -178,11 +178,17 @@ router.post("/createSchedule", async function(req, res, next) {
             }
 
             if (found == false && shiftLength == 1) {
-              console.log("Unable to find workers for this shift")
-              cannotFind = true;
-              allShifts.push({ from: formatMoment(shiftStart), to: formatMoment(segmentEnd), status: "Unable to find" });
-              //hoursCovered = size; // ???
-              //break;
+              if (hoursCovered == size - 1) {
+                console.log("Unable to find workers for this shift")
+                cannotFind = true;
+                allShifts.push({ from: formatMoment(shiftStart), to: formatMoment(segmentEnd), status: "Unable to find" });
+                //hoursCovered = size; // ???
+                //break;
+              } else {
+                // Advance the "hours covered" count by one, and restart the search
+                hoursCovered++;
+              }
+              
             }
 
             if (found)
