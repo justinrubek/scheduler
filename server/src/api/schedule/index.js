@@ -9,7 +9,7 @@ import { dateValidator as validDate, timeValidator as validTime } from "../valid
 
 function validSegments(segments) {
   let valid = true;
-  
+
   segments.forEach(segment => {
     if (validTime(segment.start) && validTime(segment.end) && segment.strength > 0) {
     } else {
@@ -26,18 +26,18 @@ async function getAvailability(startDateTime, endDateTime, workers, interval, ac
     }
   });
 
- const result = await client.api("/me/calendar/getschedule").version("beta")
-  .post({
-    Schedules: workers,
-    // TODO: Change times to UTC
-    StartTime: { dateTime: startDateTime, timeZone: "CST" },
-    EndTime: { dateTime: endDateTime, timeZone: "CST" },
-    availabilityViewInterval: interval
-  });
+  const result = await client.api("/me/calendar/getschedule").version("beta")
+    .post({
+      Schedules: workers,
+      // TODO: Change times to UTC
+      StartTime: { dateTime: startDateTime, timeZone: "CST" },
+      EndTime: { dateTime: endDateTime, timeZone: "CST" },
+      availabilityViewInterval: interval
+    });
 
   return result.value.reduce((accum, workerSchedule) => {
     const { scheduleId, availabilityView } = workerSchedule;
-    accum[scheduleId] = availabilityView;
+    accum[scheduleId] = [...availabilityView];
     console.log(`${scheduleId}: ${availabilityView}`);
     return accum;
   }, {});
@@ -54,10 +54,10 @@ router.post("/createSchedule", async function(req, res, next) {
           { start: "09:00", end: "11:00" },
           { start: "11:00", end: "13:00" },
         ],
-      
+
     };
-*/
-  
+   */
+
   const accessToken = await authHelper.getAccessToken(req.cookies, res);
   const { strengthData, range } = req.body;
 
@@ -76,7 +76,7 @@ router.post("/createSchedule", async function(req, res, next) {
     "leemax@bvu.edu",
     "hoegmit@bvu.edu",
     "deanaus@bvu.edu",
-    */
+     */
     "martmic2@bvu.edu",
     "horsbaz@bvu.edu",
   ]
@@ -84,16 +84,19 @@ router.post("/createSchedule", async function(req, res, next) {
   /*
     getAvailability(Monday 8AM to 5PM, ...) = 
        { "rubejus@bvu.edu": "222000000", ... }
-  */
-  const availability = await getAvailability(new Date(range.start).toISOString(), new Date(range.end).toISOString(), workers, 60, accessToken);
+   */
+  let availability = await getAvailability(new Date(range.start).toISOString(), new Date(range.end).toISOString(), workers, 60, accessToken);
 
   // Start all workers as having 0 hours this schedule
   // May need to adjust to function as a priority queue
   const hoursWorked = workers.map(email => ({ id: email, hours: 0 }));
   const sortByHours = () => hoursWorked.sort((a, b) => a.hours - b.hours);
-  
+
   const allShifts = [];
-  
+  const unable = {}
+
+  let hoursUncovered = 0;
+
   // Some stuff to help
   const dateTime = (date, time) => `${date}T${time}:00`;
   const availabilityStart = moment(new Date(range.start));
@@ -109,33 +112,27 @@ router.post("/createSchedule", async function(req, res, next) {
         let startDateString = dateTime(dateString, segment.start);
         let endDateString = dateTime(dateString, segment.end);
         // console.log(startDateString, endDateString)
-        
+
         let segmentStart = moment(new Date(startDateString));
         let segmentEnd = moment(new Date(endDateString));
-        
+
         let index = moment.duration(segmentStart.diff(availabilityStart)).asHours();
         let size = moment.duration(segmentEnd.diff(segmentStart)).asHours();
 
         console.log(`Start: ${segmentStart.format("YYYY-MM-DDTHH:MM:SS")} index: ${index} size: ${size}`);
 
-        // Now, greedily pull
-        let hoursCovered = 0;
 
         const isAvailable = (workerId, startIndex, duration) => {
-          console.log(workerId, startIndex, duration);
           /*
           let avail = availability[workerId].slice(startIndex, startIndex+duration);
-          console.log(avail);
           // return avail.every(hour => hour == 0);
           for (let i of avail) {
             if (i != 0)
               return false;
           }
           return true;
-          */
+           */
           for (let i = startIndex; i < startIndex+duration; i++) {
-            if (workerId == "beebgar@bvu.edu")
-              console.log(availability[workerId][i]);
             if (availability[workerId][i] != 0) {
               return false;
             }
@@ -143,75 +140,96 @@ router.post("/createSchedule", async function(req, res, next) {
           return true;
         }
 
-        const formatMoment = mom => mom.format("MMMM Do YYYY, h:mm:ss a")
-        while (hoursCovered < size) {
-          let cannotFind = false;
-          for (let shiftLength = size - hoursCovered; shiftLength > 0; shiftLength--) {
-            // Look at each employee by minimum number of hours in this schedule so far
-            // Check if they are available from index + hoursCovered to index+shiftLength
-            // If so, increment hoursCovered by shiftLength and mark down the workerId, shift start, and duration
-            let found = false;
-            sortByHours();
-            let shiftStart = moment(availabilityStart).add(index+hoursCovered, "hours");
-            console.log(`Looking for shift of length ${shiftLength} from ${formatMoment(shiftStart)} towards ${formatMoment(segmentEnd)}`);
-            
-            for (let worker of hoursWorked) {
-              if (isAvailable(worker.id, index+hoursCovered, shiftLength)) {
-                // This is our worker!
-                found = true;
-                // Figure out what time they start working
+        const adjustAvailability = (workerId, index, length) => {
 
-                allShifts.push({ id: worker.id, start: formatMoment(shiftStart),
-                  dateString: dateString, duration: shiftLength});
-                /*
+          console.log(`Adjusting avail for ${workerId} from ${index} for ${length}`);
+          availability[workerId] = availability[workerId].map((hour, i) => {
+            if (i >= index && i < index+length) {
+              console.log("Marked busy", i);
+              return 2;
+            }
+            return hour;
+          }) ;
+        }
+
+        const formatMoment = mom => mom.format("MMMM Do YYYY, h:mm:ss a")
+        // Now, greedily pull
+        for (let i = 0; i < segment.strength; i++) {
+          let hoursCovered = 0;
+
+          console.log(`Starting search for worker ${i}`);
+          while (hoursCovered < size) {
+            for (let shiftLength = size - hoursCovered; shiftLength > 0; shiftLength--) {
+              // Look at each employee by minimum number of hours in this schedule so far
+              // Check if they are available from index + hoursCovered to index+shiftLength
+              // If so, increment hoursCovered by shiftLength and mark down the workerId, shift start, and duration
+              let found = false;
+              sortByHours();
+              let shiftStart = moment(availabilityStart).add(index+hoursCovered, "hours");
+              console.log(`Looking for shift of length ${shiftLength} from ${formatMoment(shiftStart)} towards ${formatMoment(segmentEnd)}`);
+
+              for (let worker of hoursWorked) {
+                if (isAvailable(worker.id, index+hoursCovered, shiftLength)) {
+                  // This is our worker!
+                  found = true;
+                  // Figure out what time they start working
+
+                  allShifts.push({ id: worker.id, start: formatMoment(shiftStart),
+                    dateString: dateString, duration: shiftLength});
+                  /*
                 allShifts.push({ id: worker.id, start: formatMoment(shiftStart.tz("America/Toronto")),
                   dateString: dateString, hoursAfterAvail: index+hoursCovered, duration: shiftLength});
-                  */
+                   */
 
-                worker.hours += shiftLength;
-                hoursCovered += shiftLength;
-                // If we're to support strength, then perhaps at this point we should
-                // update the availability string of this worker so they do not get picked twice.
-                // Then, we can just wrap this hoursCovered stuff in a loop from 0 to the strength number
-                
+                  console.log(`Scheduling ${worker.id} to work for ${shiftLength} at ${formatMoment(shiftStart)}`);
+                  // If we're to support strength, then perhaps at this point we should
+                  // update the availability string of this worker so they do not get picked twice.
+                  // Then, we can just wrap this hoursCovered stuff in a loop from 0 to the strength number
+                  console.log(`Availability before: ${availability[worker.id]}`);
+                  adjustAvailability(worker.id, index+hoursCovered, shiftLength);
+                  console.log(`Availability after: ${availability[worker.id]}`);
+                  worker.hours += shiftLength;
+                  hoursCovered += shiftLength;
+                  
+                  break;
+
+                }
               }
-            }
 
-            if (found == false && shiftLength == 1) {
-              if (hoursCovered == size - 1) {
-                console.log("Unable to find workers for this shift")
-                cannotFind = true;
-                allShifts.push({ from: formatMoment(shiftStart), to: formatMoment(segmentEnd), status: "Unable to find" });
-                //hoursCovered = size; // ???
-                //break;
-              } else {
+              if (found == false && shiftLength == 1) {
                 // Advance the "hours covered" count by one, and restart the search
-                hoursCovered++;
-              }
-              
-            }
+                let key = formatMoment(shiftStart);
+                if (unable[key]) {
+                  unable[key]++;
+                } else {
+                  unable[key] = 1;
+                }
 
-            if (found)
+                // allShifts.push({ at: formatMoment(shiftStart), status: "Unable to find", });
+                hoursCovered++;
+                hoursUncovered++;
+
+              }
+
+              if (found)
+                break;
+
+            }
+            if (hoursCovered >= size)
               break;
-            
-          }
-          if (hoursCovered >= size)
-            break;
-          if (cannotFind) {
-            break;
           }
         }
-         
+
       });
-          
+
     } else {
       // Something is bad about the data
-      
+
     }
   });
-  
+
   // res.send(schedule);
-  res.send(allShifts);
+  res.send({ allShifts, hoursWorked, hoursUncovered, unable });
   // res.send(availability);
 });
 
