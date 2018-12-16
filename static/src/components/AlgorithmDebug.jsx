@@ -2,8 +2,9 @@ import React, { Component } from "react";
 import axios from "axios";
 
 const form_input = [
-  { type: "date", name: "date", label: "Date to check" },
+  { type: "date", name: "startDate", label: "Start date" },
   { type: "time", name: "startTime", label: "Start time" },
+  { type: "date", name: "endDate", label: "End date" },
   { type: "time", name: "endTime", label: "End time" },
   { type: "number", name: "interval", label: "Time Interval(minutes)" }
 ];
@@ -34,12 +35,13 @@ export default class AlgorithmDebug extends Component {
           input={form_input}
           name="Schedule Interval Checker"
           onChange={data => {
-            const { interval, startTime, endTime, date } = data;
-            let dateTime = time => `${date}T${time}:00`;
+            const { interval, startTime, endTime, startDate, endDate } = data;
+            let dateTime = (date, time) => `${date}T${time}:00`;
 
             const url = `/api/office/calendar?i=${interval}&start=${dateTime(
+              startDate,
               startTime
-            )}&end=${dateTime(endTime)}`;
+            )}&end=${dateTime(endDate, endTime)}`;
             this.setState({ link: url });
           }}
         />

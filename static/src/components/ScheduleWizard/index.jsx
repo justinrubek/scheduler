@@ -10,6 +10,7 @@ const moment = extendMoment(Moment);
 
 import TimeSegment from "./TimeSegment";
 import SegmentCreator from "./SegmentCreator";
+import ShiftTimeDisplay from "./ShiftTimeDisplay";
 
 class SegmentSelector extends Component {
   constructor(props) {
@@ -31,11 +32,11 @@ class SegmentSelector extends Component {
       dates.push({ start: weekendStart, end: weekendEnd });
     }
 
-    this.state = { dates };
+    this.state = { dates, otherDates: { start: moment(), end: moment() } };
   }
 
   render() {
-    const { dates } = this.state;
+    const { dates, otherDates } = this.state;
 
     const display = dates.map(date => {
       let click = () =>
@@ -43,19 +44,64 @@ class SegmentSelector extends Component {
           date.start.format("YYYY-MM-DD"),
           date.end.format("YYYY-MM-DD")
         );
+      let label = `${date.start.format("ddd MMMM Do YY")} to ${date.end.format(
+        "ddd MMMM Do YY"
+      )}`;
 
       return (
-        <div onClick={click}>
-          {date.start.format("ddd MMMM Do YY")} to{" "}
-          {date.end.format("ddd MMMM Do YY")}
+        <div className={style.button} onClick={click}>
+          {label}
         </div>
       );
     });
 
+    const others = (
+      <div className={`${style.vcenter} ${style.container}`}>
+        <input
+          type="date"
+          id="otherStart"
+          onChange={e =>
+            this.setState({
+              otherDates: {
+                ...otherDates,
+                start: moment(e.target.value, "YYYY-MM-DD")
+              }
+            })
+          }
+        />
+        {" to "}
+        <input
+          type="date"
+          id="otherEnd"
+          onChange={e =>
+            this.setState({
+              otherDates: {
+                ...otherDates,
+                end: moment(e.target.value, "YYYY-MM-DD")
+              }
+            })
+          }
+        />
+        <div
+          onClick={() => this.props.select(otherDates.start, otherDates.end)}
+          className={style.button}
+        >
+          Select
+        </div>
+      </div>
+    );
+
     return (
-      <div>
-        Select shift range to schedule for
-        {display}
+      <div className={style.box}>
+        <h2>When would you like to schedule for?</h2>
+        <span>
+          <h3>Normal work weeks</h3>
+          {display}
+        </span>
+        <span>
+          <h3>Pick between dates</h3>
+          {others}
+        </span>
       </div>
     );
   }
@@ -69,9 +115,16 @@ export default class ScheduleWizard extends Component {
   }
 
   render() {
-    const { startDate, endDate } = this.state;
+    const { shifts, startDate, endDate } = this.state;
 
-    if (startDate && endDate) {
+    if (shifts) {
+      return (
+        <ShiftTimeDisplay
+          shifts={shifts}
+          cancel={() => this.setState({ shifts: null })}
+        />
+      );
+    } else if (startDate && endDate) {
       return (
         <SegmentCreator
           startDate={startDate}
@@ -82,6 +135,7 @@ export default class ScheduleWizard extends Component {
               data
             );
             console.log(response);
+            this.setState({ shifts: response.data.allShifts });
           }}
           cancel={() => this.setState({ startDate: null, endDate: null })}
         />

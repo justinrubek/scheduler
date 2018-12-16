@@ -22,7 +22,7 @@ router.get("/", async function(req, res, next) {
   if (accessToken && userName) {
     res.send({ accessToken, userName});
   } else {
-    res.redirect(authHelper.getAuthUrl());
+    res.send({ url: authHelper.getAuthUrl() });
   }
 });
 

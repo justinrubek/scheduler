@@ -17,6 +17,12 @@
   display: flex;
 }
 
+.rows {
+  border: 1px solid black;
+  display: flex;
+  flex-direction: column;
+}
+
 .title {
   padding: 0px 8px 3px 8px;
   font-weight: bold;
@@ -38,12 +44,44 @@
   padding: 5px;
 }
 
+.shift {
+  padding: 5px;
+  border: 1px solid black;
+}
+
 .separated {
   display: flex;
   justify-content: space-between;
 }
 
 .box {
-  border: 1px solid black;
+  border: 1px solid #646464;
   margin-top: 4px;
+}
+
+.button {
+  padding: 12px 20px; 
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 5px;
+  background-color: #09F;
+  color: #181818;
+  font-weight: bold;
+  transition: background-color 1s ease;
+}
+
+.button:hover {
+  background-color: #07D;
+}
+
+.group {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.vcenter {
+  display: flex;
+  align-items: center;
 }

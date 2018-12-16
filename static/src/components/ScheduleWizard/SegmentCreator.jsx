@@ -40,7 +40,7 @@ export default class SegmentCreator extends Component {
 
   // Called when the user clicks the create shift button
   submit() {
-    const { dates } = this.state;
+    const { dates, selectMethod } = this.state;
 
     // Get the earliest and latest datetimes to capture the time range
     const dateTime = (date, time) => `${date}T${time}:00`;
@@ -65,7 +65,7 @@ export default class SegmentCreator extends Component {
     }, {});
 
     if (this.props.onSubmit) {
-      this.props.onSubmit({ strengthData, range });
+      this.props.onSubmit({ strengthData, range, selectMethod });
     }
   }
 
@@ -156,13 +156,14 @@ export default class SegmentCreator extends Component {
         <div className={style.segment_container} key={date.dateString}>
           <div key="info" className={style.separated}>
             <h2> {date.moment.format("MMM Do YY")} </h2>
-            <button
+            <div
               onClick={() => {
                 this.createSegment(date.dateString);
               }}
+              className={`${style.button} ${style.vcenter}`}
             >
               +
-            </button>
+            </div>
           </div>
           <div key="form" className={style.segment_display}>
             {segments}
@@ -171,15 +172,36 @@ export default class SegmentCreator extends Component {
       );
     });
 
+    let displayStart = moment(this.props.startDate, "YYYY-MM-DD").format(
+      "MMM Do"
+    );
+    let displayEnd = moment(this.props.endDate, "YYYY-MM-DD").format("MMM Do");
+
     return (
       <div className={style.box}>
         <div key="top" className={style.separated}>
-          <div onClick={this.props.cancel} className={style.title}>
-            Schedule shifts for ({this.props.startDate} to {this.props.endDate})
-          </div>
-          <button onClick={this.submit} className={style.submit}>
+          <span className={style.group}>
+            <div className={style.title}>
+              {displayStart} to {displayEnd}
+            </div>
+            <div onClick={this.props.cancel} className={style.button}>
+              Cancel
+            </div>
+          </span>
+
+          <span key="options" className={style.group}>
+            <p>Selection method</p>
+            <select
+              onChange={e => this.setState({ selectMethod: e.target.value })}
+            >
+              <option value="auto">Auto</option>
+              <option value="balanced">Balance hours</option>
+            </select>
+          </span>
+
+          <div onClick={this.submit} className={style.button}>
             Generate shifts
-          </button>
+          </div>
         </div>
         <div key="days" className={style.container}>
           {days}

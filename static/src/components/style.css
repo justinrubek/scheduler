@@ -1,9 +1,23 @@
 body {
-  background-color: #dadada;
+  background-color: #363636;
+  font-family: sans-serif;
+}
+
+h1, h2, h3, h4 {
+  color: #09F;
+  margin-left: 5px;
+}
+
+p {
+  color: #f0f0f0;
+}
+
+div {
+  color: #f0f0f0;
 }
 
 .box {
-  border: 4px solid black;
+  border: 4px solid #646464;
 }
 
 .button {

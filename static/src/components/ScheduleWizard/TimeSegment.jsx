@@ -47,9 +47,14 @@ export default class TimeSegment extends React.Component {
       <div className={style.box}>
         <div className={style.separated}>
           <p className={style.smalltitle}>{this.props.title}</p>
-          <button onClick={this.props.onRemove}>X</button>
+          <div
+            className={`${style.button} ${style.vcenter}`}
+            onClick={this.props.onRemove}
+          >
+            x
+          </div>
         </div>
-        <LabeledItem label="Start Time">
+        <LabeledItem label="Start">
           <TimeField
             onChange={time => {
               this.changeValue("startTime", time);
@@ -57,7 +62,7 @@ export default class TimeSegment extends React.Component {
             value={startTime}
           />
         </LabeledItem>
-        <LabeledItem label="End Time">
+        <LabeledItem label="End">
           <TimeField
             onChange={time => {
               this.changeValue("endTime", time);
@@ -65,7 +70,7 @@ export default class TimeSegment extends React.Component {
             value={endTime}
           />
         </LabeledItem>
-        <LabeledItem label="Strength">
+        <LabeledItem label="Workers">
           <input
             key="count"
             type="number"

@@ -144,8 +144,9 @@ router.get("/", async function(req, res, next) {
         "swanmat@bvu.edu",
         "mccokel@bvu.edu",
         "beebgar@bvu.edu",
-        "watsbro@bvu.edu",
-        "gliebra@bvu.edu",
+        "horsbaz@bvu.edu",
+        "martmic2@bvu.edu",
+        "fordjac@bvu.edu"
       ];
 
       const result = await client

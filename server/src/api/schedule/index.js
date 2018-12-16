@@ -1,6 +1,9 @@
 import express from "express";
 import moment from "moment-timezone";
+
 import authHelper from "../helpers/auth";
+import { greedy, busyWorkers } from "./selectors";
+
 const graph = require("@microsoft/microsoft-graph-client");
 const router = express.Router();
 
@@ -18,6 +21,17 @@ function validSegments(segments) {
   });
   return valid;
 }
+
+router.use(async function(req, res, next) {
+  const accessToken = await authHelper.getAccessToken(req.cookies, res);
+  const userName = req.cookies.graph_user_name;
+
+  if (accessToken && userName) {
+    next();
+  } else {
+    res.redirect(authHelper.getAuthUrl());
+  }
+});
 
 async function getAvailability(startDateTime, endDateTime, workers, interval, accessToken) {
   const client = graph.Client.init({
@@ -38,54 +52,45 @@ async function getAvailability(startDateTime, endDateTime, workers, interval, ac
   return result.value.reduce((accum, workerSchedule) => {
     const { scheduleId, availabilityView } = workerSchedule;
     accum[scheduleId] = [...availabilityView];
-    console.log(`${scheduleId}: ${availabilityView}`);
     return accum;
   }, {});
 }
 
-router.post("/createSchedule", async function(req, res, next) {
-  /*
-    strengthData: {
-      "2018-11-07": [
-          { start: "09:00", end: "11:00" },
-          { start: "11:00", end: "13:00" },
-        ],
-      "2018-11-08": [
-          { start: "09:00", end: "11:00" },
-          { start: "11:00", end: "13:00" },
-        ],
+async function greedy(strengthData, range, availability, workers) {
+  Object.keys(strengthData).forEach(dateString => {
+    if (validDate(dateString) && validSegments(strengthData[dateString])) {
+      // Good!
+    } else {
+      // Our data is bad somehow 
+    }
+  });
 
-    };
-   */
-
-  const accessToken = await authHelper.getAccessToken(req.cookies, res);
-  const { strengthData, range } = req.body;
 
   // TODO: Validate range data
 
   // Get the availability view of the workers on the time range
   // Then, for each segment find the indices on this array that
   // corresponds with its time
-  let workers = [
-    "rubejus@bvu.edu",
-    "swanmat@bvu.edu",
-    "mccokel@bvu.edu",
-    "beebgar@bvu.edu",
-    /*
-    "watsbro@bvu.edu",
-    "leemax@bvu.edu",
-    "hoegmit@bvu.edu",
-    "deanaus@bvu.edu",
-     */
-    "martmic2@bvu.edu",
-    "horsbaz@bvu.edu",
-  ]
-
   /*
     getAvailability(Monday 8AM to 5PM, ...) = 
-       { "rubejus@bvu.edu": "222000000", ... }
+       { "rubejus@bvu.edu": ["2", "2", "2", ... ], ... }
    */
-  let availability = await getAvailability(new Date(range.start).toISOString(), new Date(range.end).toISOString(), workers, 60, accessToken);
+
+  const adjustAvailability = (workerId, index, length) => {
+    availability[workerId] = availability[workerId].map((hour, i) => {
+      if (i >= index && i < index+length) {
+        return 2;
+      }
+      return hour;
+    }) ;
+  }
+
+  const isAvailable = (workerId, startIndex, duration) => {
+    return availability[workerId].slice(startIndex, startIndex+duration).every(hour => hour == 0);
+  }
+
+  const formatMoment = mom => mom.format("MMMM Do YYYY, h:mm:ss a")
+
 
   // Start all workers as having 0 hours this schedule
   // May need to adjust to function as a priority queue
@@ -100,18 +105,15 @@ router.post("/createSchedule", async function(req, res, next) {
   // Some stuff to help
   const dateTime = (date, time) => `${date}T${time}:00`;
   const availabilityStart = moment(new Date(range.start));
-  // Validate strength data
+  // TODO: Validate data first
+  
   Object.keys(strengthData).forEach(dateString => {
     if (validDate(dateString) && validSegments(strengthData[dateString])) {
       // Proceed to the next stage
       strengthData[dateString].forEach(segment => {
-        // TODO: Find the indices of the availability array corresponding to this segment
-        // then, get slices of the array for each worker, their availability for this segment's
-        // time frame.
-        console.log(segment);
+        // Find the index of the availability array corresponding to this segment's starting time
         let startDateString = dateTime(dateString, segment.start);
         let endDateString = dateTime(dateString, segment.end);
-        // console.log(startDateString, endDateString)
 
         let segmentStart = moment(new Date(startDateString));
         let segmentEnd = moment(new Date(endDateString));
@@ -119,45 +121,10 @@ router.post("/createSchedule", async function(req, res, next) {
         let index = moment.duration(segmentStart.diff(availabilityStart)).asHours();
         let size = moment.duration(segmentEnd.diff(segmentStart)).asHours();
 
-        console.log(`Start: ${segmentStart.format("YYYY-MM-DDTHH:MM:SS")} index: ${index} size: ${size}`);
-
-
-        const isAvailable = (workerId, startIndex, duration) => {
-          /*
-          let avail = availability[workerId].slice(startIndex, startIndex+duration);
-          // return avail.every(hour => hour == 0);
-          for (let i of avail) {
-            if (i != 0)
-              return false;
-          }
-          return true;
-           */
-          for (let i = startIndex; i < startIndex+duration; i++) {
-            if (availability[workerId][i] != 0) {
-              return false;
-            }
-          }
-          return true;
-        }
-
-        const adjustAvailability = (workerId, index, length) => {
-
-          console.log(`Adjusting avail for ${workerId} from ${index} for ${length}`);
-          availability[workerId] = availability[workerId].map((hour, i) => {
-            if (i >= index && i < index+length) {
-              console.log("Marked busy", i);
-              return 2;
-            }
-            return hour;
-          }) ;
-        }
-
-        const formatMoment = mom => mom.format("MMMM Do YYYY, h:mm:ss a")
-        // Now, greedily pull
+        // Now, greedily find workers to fill this segment
         for (let i = 0; i < segment.strength; i++) {
           let hoursCovered = 0;
 
-          console.log(`Starting search for worker ${i}`);
           while (hoursCovered < size) {
             for (let shiftLength = size - hoursCovered; shiftLength > 0; shiftLength--) {
               // Look at each employee by minimum number of hours in this schedule so far
@@ -166,53 +133,43 @@ router.post("/createSchedule", async function(req, res, next) {
               let found = false;
               sortByHours();
               let shiftStart = moment(availabilityStart).add(index+hoursCovered, "hours");
-              console.log(`Looking for shift of length ${shiftLength} from ${formatMoment(shiftStart)} towards ${formatMoment(segmentEnd)}`);
 
               for (let worker of hoursWorked) {
                 if (isAvailable(worker.id, index+hoursCovered, shiftLength)) {
                   // This is our worker!
                   found = true;
-                  // Figure out what time they start working
 
-                  allShifts.push({ id: worker.id, start: formatMoment(shiftStart),
+                  allShifts.push({ id: worker.id, start: shiftStart,
                     dateString: dateString, duration: shiftLength});
-                  /*
-                allShifts.push({ id: worker.id, start: formatMoment(shiftStart.tz("America/Toronto")),
-                  dateString: dateString, hoursAfterAvail: index+hoursCovered, duration: shiftLength});
-                   */
 
-                  console.log(`Scheduling ${worker.id} to work for ${shiftLength} at ${formatMoment(shiftStart)}`);
-                  // If we're to support strength, then perhaps at this point we should
-                  // update the availability string of this worker so they do not get picked twice.
-                  // Then, we can just wrap this hoursCovered stuff in a loop from 0 to the strength number
-                  console.log(`Availability before: ${availability[worker.id]}`);
+                  // Update the availability string of this worker so they do not get picked twice.
                   adjustAvailability(worker.id, index+hoursCovered, shiftLength);
-                  console.log(`Availability after: ${availability[worker.id]}`);
+                  
                   worker.hours += shiftLength;
                   hoursCovered += shiftLength;
-                  
                   break;
-
                 }
-              }
-
-              if (found == false && shiftLength == 1) {
-                // Advance the "hours covered" count by one, and restart the search
-                let key = formatMoment(shiftStart);
-                if (unable[key]) {
-                  unable[key]++;
-                } else {
-                  unable[key] = 1;
-                }
-
-                // allShifts.push({ at: formatMoment(shiftStart), status: "Unable to find", });
-                hoursCovered++;
-                hoursUncovered++;
-
               }
 
               if (found)
                 break;
+              else {
+                if (shiftLength == 1) {
+                  // Advance the "hours covered" count by one, and restart the search
+                  let key = formatMoment(shiftStart);
+                  if (unable[key]) {
+                    unable[key]++;
+                  } else {
+                    unable[key] = 1;
+                  }
+
+                  // allShifts.push({ at: formatMoment(shiftStart), status: "Unable to find", });
+                  hoursCovered++;
+                  hoursUncovered++;
+
+                }
+              }
+
 
             }
             if (hoursCovered >= size)
@@ -227,21 +184,48 @@ router.post("/createSchedule", async function(req, res, next) {
 
     }
   });
+  return { allShifts, hoursWorked, hoursUncovered, unable };
 
-  // res.send(schedule);
-  res.send({ allShifts, hoursWorked, hoursUncovered, unable });
-  // res.send(availability);
-});
+}
 
-router.get("/", async function(req, res, next) {
+router.post("/createSchedule", async function(req, res, next) {
+  const { strengthData, range, selectMethod } = req.body;
   const accessToken = await authHelper.getAccessToken(req.cookies, res);
-  const userName = req.cookies.graph_user_name;
 
-  if (accessToken && userName) {
-    res.send({ accessToken, userName});
-  } else {
-    res.redirect(authHelper.getAuthUrl());
+  // Should we get the shift d
+  let workers = [
+    "rubejus@bvu.edu",
+    "swanmat@bvu.edu",
+    "mccokel@bvu.edu",
+    "beebgar@bvu.edu",
+    /*
+    "watsbro@bvu.edu",
+    "leemax@bvu.edu",
+    "hoegmit@bvu.edu",
+    "deanaus@bvu.edu",
+    "snydcol@bvu.edu",
+     */
+    "martmic2@bvu.edu",
+    "horsbaz@bvu.edu",
+  ]
+
+  const availability = await getAvailability(new Date(range.start).toISOString(), new Date(range.end).toISOString(), workers, 60, accessToken);
+  const shifts = {};
+  switch (selectMethod) {
+    case "busy":
+      let s = await busyWorkers(strengthData, range, availability, workers);
+      Object.assign(shifts, s);
+      break;
+    case "greedy":
+    default:
+      let s = await greedy(strengthData, range, availability, workers)
+      Object.assign(shifts, s);
+      break;
   }
+
+  res.send(shifts);
+  // res.send({ allShifts, hoursWorked, hoursUncovered, unable });
 });
+
 
 export default router;
