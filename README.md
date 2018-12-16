@@ -4,7 +4,7 @@
 
 Use yarn to install dependencies and build the app
 
-`yarn install
-yarn build
-yarn start`
+1. `yarn install`
+2. `yarn build`
+3. `yarn start`
 
