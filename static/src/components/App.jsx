@@ -8,6 +8,8 @@ import Form from "./Form";
 
 import ScheduleWizard from "./ScheduleWizard";
 
+import AlgorithmDebug from "./AlgorithmDebug";
+
 function log(type, time) {
   console.log(`Sending: ${type} for time ${time}`);
   // Create log object
@@ -21,66 +23,61 @@ function log(type, time) {
 
 const actions = [
   {
-    name: "shift_creation_form",
-    input: [
-      { type: "date", name: "date", label: "Shift date" },
-      { type: "time", name: "startTime", label: "Starting time" },
-      { type: "time", name: "endTime", label: "Ending time" },
-      { type: "employee", name: "scheduledWorker", label: "Scheduled employee" }
-    ]
-  },
-  {
     name: "employee_creation_form",
-    input: [{ type: "text", name: "name", label: "Name" }],
-    submit: data => axios.post("/api/employees", data)
+    input: [
+      { type: "text", name: "name", label: "Name" },
+      { type: "text", name: "email", label: "Email" }
+    ]
   }
 ];
 
-// Should not have a function for this, can be handled due to type and route from action form definition
-function create_shift(shiftData) {
-  axios.post("/api/shifts", shiftData);
-}
-/*
-function create_shift(date, startTime, endTime, scheduledWorker = null) {
-  console.log(
-    `Creating shift for employee ${scheduledWorker} on date: ${date.toISOString()} from ${startTime} to ${endTime}`
-  );
-}
- */
 export default class App extends React.Component {
   constructor(props) {
     super(props);
 
-    this.createShift = this.createShift.bind(this);
-
+    this.componentWillMount = this.componentWillMount.bind(this);
     this.state = {};
   }
 
-  createShift(data) {
-    const { date, startTime, endTime, scheduledWorker } = data;
+  async componentWillMount() {
+    let resp = await axios.get("/api/office");
 
-    create_shift(date, startTime, endTime, scheduledWorker);
+    console.log(resp.data);
+    console.log("setting state to ", resp.data);
+    this.setState(resp.data);
+    /*
+    console.log("After response");
+    if (resp.url) {
+      console.log("got URL");
+      this.setState({ url: resp.url });
+    } else {
+      console.log("No url")
+      this.setState({ authToken: resp.authToken });
+    }
+    */
   }
 
   render() {
-    const forms = [];
-    for (let action of actions) {
-      forms.push(
-        <div className={style.box} key={action.name}>
-          <Form
-            input={action.input}
-            name={action.name}
-            onChange={console.log}
-          />
-        </div>
+    const { accessToken, url } = this.state;
+    let scheduler;
+
+    if (url && !accessToken) {
+      window.location.href = url;
+      scheduler = (
+        <button onClick={() => (window.location.href = url)}>Log in</button>
       );
+    } else if (accessToken) {
+      scheduler = (
+        <ScheduleWizard startDate="2018-10-27" endDate="2018-11-02" />
+      );
+    } else {
+      scheduler = <p>loading</p>;
     }
 
     return (
       <div>
         <h1>Scheduler</h1>
-        <ScheduleWizard startDate="2018-10-27" endDate="2018-11-05" />
-        {forms}
+        {scheduler}
       </div>
     );
   }

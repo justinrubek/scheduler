@@ -9,140 +9,144 @@ import { extendMoment } from "moment-range";
 const moment = extendMoment(Moment);
 
 import TimeSegment from "./TimeSegment";
+import SegmentCreator from "./SegmentCreator";
+import ShiftTimeDisplay from "./ShiftTimeDisplay";
+
+class SegmentSelector extends Component {
+  constructor(props) {
+    super(props);
+
+    const dates = [];
+    for (let i = 0; i < 3; i++) {
+      const start = moment()
+        .startOf("week")
+        .add(1, "day")
+        .add(i * 7, "days");
+
+      const end = moment(start).add(4, "days");
+
+      dates.push({ start, end });
+
+      const weekendStart = moment(end).add(1, "day");
+      const weekendEnd = moment(weekendStart).add(1, "day");
+      dates.push({ start: weekendStart, end: weekendEnd });
+    }
+
+    this.state = { dates, otherDates: { start: moment(), end: moment() } };
+  }
+
+  render() {
+    const { dates, otherDates } = this.state;
+
+    const display = dates.map(date => {
+      let click = () =>
+        this.props.select(
+          date.start.format("YYYY-MM-DD"),
+          date.end.format("YYYY-MM-DD")
+        );
+      let label = `${date.start.format("ddd MMMM Do YY")} to ${date.end.format(
+        "ddd MMMM Do YY"
+      )}`;
+
+      return (
+        <div className={style.button} onClick={click}>
+          {label}
+        </div>
+      );
+    });
+
+    const others = (
+      <div className={`${style.vcenter} ${style.container}`}>
+        <input
+          type="date"
+          id="otherStart"
+          onChange={e =>
+            this.setState({
+              otherDates: {
+                ...otherDates,
+                start: moment(e.target.value, "YYYY-MM-DD")
+              }
+            })
+          }
+        />
+        {" to "}
+        <input
+          type="date"
+          id="otherEnd"
+          onChange={e =>
+            this.setState({
+              otherDates: {
+                ...otherDates,
+                end: moment(e.target.value, "YYYY-MM-DD")
+              }
+            })
+          }
+        />
+        <div
+          onClick={() => this.props.select(otherDates.start, otherDates.end)}
+          className={style.button}
+        >
+          Select
+        </div>
+      </div>
+    );
+
+    return (
+      <div className={style.box}>
+        <h2>When would you like to schedule for?</h2>
+        <span>
+          <h3>Normal work weeks</h3>
+          {display}
+        </span>
+        <span>
+          <h3>Pick between dates</h3>
+          {others}
+        </span>
+      </div>
+    );
+  }
+}
 
 export default class ScheduleWizard extends Component {
   constructor(props) {
     super(props);
 
-    this.createSegment = this.createSegment.bind(this);
-    this.segmentChange = this.segmentChange.bind(this);
-
-    const { startDate, endDate } = this.props;
-
-    const dates = [];
-    if (startDate < endDate) {
-      const start = moment(startDate, "YYYY-MM-DD");
-      const end = moment(endDate, "YYYY-MM-DD");
-      const range = moment.range(start, end);
-
-      for (let day of range.by("day")) {
-        let dateString = day.format("YYYY-MM-DD");
-
-        dates.push({ dateString, segments: [], moment: day });
-      }
-    } else {
-      throw new Error("startDate for ScheduleWizard is after endDate");
-    }
-
-    this.state = { dates };
-  }
-
-  // Called when the user clicks the create shift button
-  submit() {}
-
-  createSegment(dateString) {
-    const { dates } = this.state;
-
-    const new_dates = dates.map(date => {
-      if (date.dateString === dateString) {
-        date.segments.push({
-          id: shortid.generate(),
-          startTime: null,
-          endTime: null,
-          count: 0
-        });
-      }
-      return { ...date };
-    });
-
-    this.setState({ dates: new_dates });
-  }
-
-  removeSegment(dateString, id) {
-    const { dates } = this.state;
-    console.log(`Removing segment with id ${id} from ${dateString}`);
-
-    const new_dates = dates.map(date => {
-      if (date.dateString === dateString) {
-        console.log(`Found date with matching dateString`);
-        console.log(date.segments);
-        const new_segments = date.segments.filter(
-          (segment, i) => segment.id != id
-        );
-
-        console.log(new_segments);
-        return { ...date, segments: new_segments };
-      } else {
-        console.log(`Keeping ${date}`);
-        return date;
-      }
-    });
-
-    this.setState({ dates: new_dates });
-  }
-
-  segmentChange(dateString, id, val) {
-    const { dates } = this.state;
-
-    const new_dates = dates.map(date => {
-      if (date.dateString === dateString) {
-        // Copy the array and change the value at that index
-        const new_segments = date.segments.map(segment => {
-          if (segment.id === id) {
-            return val;
-          } else {
-            return segment;
-          }
-        });
-
-        return { ...date, segments: new_segments };
-      } else {
-        return date;
-      }
-    });
-
-    this.setState({ dates: new_dates });
+    this.state = {};
   }
 
   render() {
-    const { dates } = this.state;
+    const { shifts, startDate, endDate } = this.state;
 
-    const days = dates.map(date => {
-      const segments = date.segments.map((segment, i) => {
-        const change = new_val =>
-          this.segmentChange(date.dateString, i, new_val);
-
-        const remove = () => this.removeSegment(date.dateString, segment.id);
-
-        return (
-          <TimeSegment key={segment.id} onChange={change} onRemove={remove} />
-        );
-      });
-
+    if (shifts) {
       return (
-        <div className={style.segment_container} key={date.day}>
-          <h2> {date.moment.format("MMM Do YY")} </h2>
-          <button
-            onClick={() => {
-              this.createSegment(date.dateString);
-            }}
-          >
-            +
-          </button>
-          <div className={style.segment_display}>{segments}</div>
-        </div>
+        <ShiftTimeDisplay
+          shifts={shifts}
+          cancel={() => this.setState({ shifts: null })}
+        />
       );
-    });
-
-    return (
-      <div>
-        <div className={style.title}>Schedule shifts for week</div>
-        <button onClick={this.submit} className={style.submit}>
-          Submit
-        </button>
-        <div className={style.container}>{days}</div>
-      </div>
-    );
+    } else if (startDate && endDate) {
+      return (
+        <SegmentCreator
+          startDate={startDate}
+          endDate={endDate}
+          onSubmit={async data => {
+            let response = await axios.post(
+              "/api/schedule/createSchedule",
+              data
+            );
+            console.log(response);
+            this.setState({ shifts: response.data.allShifts });
+          }}
+          cancel={() => this.setState({ startDate: null, endDate: null })}
+        />
+      );
+    } else {
+      return (
+        <SegmentSelector
+          select={(startDate, endDate) => this.setState({ startDate, endDate })}
+        />
+      );
+    }
   }
 }
 

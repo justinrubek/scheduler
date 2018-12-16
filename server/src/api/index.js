@@ -2,6 +2,9 @@ import express from "express";
 
 import shifts from "./shifts";
 import employees from "./employees";
+import schedule from "./schedule";
+
+import office from "./office";
 
 const router = express.Router();
 
@@ -10,7 +13,9 @@ router.use(function timelog(req, res, next) {
   next();
 });
 
+router.use("/office", office);
 router.use("/shifts", shifts);
 router.use("/employees", employees);
+router.use("/schedule", schedule);
 
 export default router;
