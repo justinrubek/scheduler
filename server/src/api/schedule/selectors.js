@@ -1,4 +1,19 @@
-async function greedy(strengthData, range, availability, workers) {
+import moment from "moment-timezone";
+import { dateValidator as validDate, timeValidator as validTime } from "../validators";
+
+function validSegments(segments) {
+  let valid = true;
+
+  segments.forEach(segment => {
+    if (validTime(segment.start) && validTime(segment.end) && segment.strength > 0) {
+    } else {
+      valid = false
+    }
+  });
+  return valid;
+}
+
+export async function greedy(strengthData, range, availability, workers) {
   Object.keys(strengthData).forEach(dateString => {
     if (validDate(dateString) && validSegments(strengthData[dateString])) {
       // Good!
@@ -118,7 +133,4 @@ async function greedy(strengthData, range, availability, workers) {
 
 }
 
-async function busyWorkers(strengthData, range, availability, workers) {
-
-}
-export default { greedy, busyWorkers }
+// export default { greedy, busyWorkers }
