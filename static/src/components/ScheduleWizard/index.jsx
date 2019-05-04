@@ -69,7 +69,7 @@ class SegmentSelector extends Component {
             })
           }
         />
-        {" to "}
+        <span>{" to "}</span>
         <input
           type="date"
           id="otherEnd"
